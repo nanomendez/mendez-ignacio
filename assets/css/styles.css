@@ -62,3 +62,25 @@
 .color-goldenrod {
     color: goldenrod;
 }
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-progress-bar {
+    width: 50%;
+    height: auto;
+    background-color: #d2d2d2;
+}
+
+.display-none {
+    display: none;
+}
