@@ -1,128 +1,55 @@
 
-//objetivo 26-11, hacer andar la carga inicial, los botones de edit, delete y agregar medio harcodeado
-//y usando la tactica de dibujar la tabla cada vez y llevar la correspondencia index de la tabla con
-//el del array
+// employees data
+let employees = [];
+// id for next employee
+let nextEmployeeId;
 
-//objetivo 29-11 SIMPLIFICARME con el tema del manejo de fechas
-//dejo tanto en el formulario, como en la tabla, fecha de entrada y cantidad de dias
-// en un string
-
-// recupero el nodo table
-const bookingsTableEl = document.getElementById("bookings-table");
-
-// creo el nodo tbody - lo necesito para insertar las tr, sino lo hago asi tengo que recuperarlo de la tabla cada vez que lo necesito
-const bookingsTableBodyEl = document.createElement("tbody");
-bookingsTableEl.appendChild(bookingsTableBodyEl);
-
-const formEditionEl = document.getElementsByTagName("form")[0];
-
-// recupero el boton de agregar
-const addBookingButtonEl = document.getElementById("add-booking-btn");
-
-// recupero los fields del formulario del modal
-const nameInputEl = document.getElementById("name-input");
-const lastNameInputEl = document.getElementById("last-name-input");
-const phoneInputEl = document.getElementById("phone-input");
-const dateInInputEl = document.getElementById("date-in-input");
-const daysInputEl = document.getElementById("days-input");
-const guestsInputEl = document.getElementById("guests-input");
-// input oculto usado para almacenar el index del booking a modificar, o -1 si es alta
-const idBookingInputEl = document.getElementById("id-booking-input");
-
-const titleModalEl = document.getElementById("edit-booking-modal-label");
-
-// boton save changes y cancel changes
-const saveChangesBtnEl = document.getElementById("save-changes-btn");
-const cancelChangesBtnEl = document.getElementById("cancel-changes-btn");
-
-const okDeleteBtnEl = document.getElementById("ok-delete-btn");
-
-// Filtros
-const lastNameFilterEl = document.getElementById("last-name-filter-input");
-
-const filterCheckboxEl = document.getElementById("filter-checkbox");
-
-/* Progress Bar */
-
-const mostrarPbBtnEl = document.getElementById("mostrar-pb-btn"); // para borrar
-const overlayEl = document.getElementsByClassName("overlay")[0];
-const progressBarEl = document.getElementById("save-progress-bar");
-
-
-const stepProgressBar = 50;
-const durationProgressBar = 2000;
-
-let nextBookingId;
-
-
-// labels del head de la tabla
-labels = ["id", "Nombre", "Apellido", "Teléfono", "Huéspedes", "Desde", "Días", "", ""];
-
-let bookings = [
-    {
-        id: 1,
-        last_name: "Mendez",
-        first_name: "Ignacio",
-        phone: "0249154526755",
-        guests: 2,
-        date_in: "10/01/2021",
-        days: 5
-    },
-    {
-        id: 2,
-        last_name: "Lopez",
-        first_name: "Florencia",
-        phone: "0111526384095",
-        guests: 5,
-        date_in: "20/12/2020",
-        days: 19
-    },
-    {
-        id: 3,
-        last_name: "Gomez",
-        first_name: "Juan Jose",
-        phone: "025515263487",
-        guests: 6,
-        date_in: "08/02/2021",
-        days: 9
-    }
-]
-
-
-/* CONTROLADO */
+// LISTENERS
 
 // action when the document has loaded
 document.addEventListener("DOMContentLoaded", () => {
-    // create the thead element and inserted it in the table
-    bookingsTableEl.appendChild(createTableHead(labels));
-    // fill the tbody with the bookingd data
-    fillTableBody(bookings);
+    // add styles to table
+    employeesTableEl.classList.add("table", "table-striped");
     // disabled filter fields
     setFilterFieldsEnabled(false);
-})
+    // get data from json file
+    fetch('../assets/json/data.json')
+        .then(result => result.json())
+        .then(rawData => {
+            console.log(rawData);
+            // create the thead element and inserted it in the table
+            employeesTableEl.appendChild(createTableHead(rawData.labels));
 
-// action when do click on add booking button
-addBookingButtonEl.addEventListener("click", () => {
-    console.table(bookings);
-    titleModalEl.innerText = "Nueva Reserva";
+            employees = rawData.employees;
+            // fill the tbody with the employee data
+            fillTableBody(employees);
+            // initialize next employee id
+            nextEmployeeId = setNextEmployeeId(employees);
+        });
+});
+
+// action when do click on add employee button
+addEmployeeButtonEl.addEventListener("click", () => {
+    console.table(employees);
+    titleModalEl.innerText = "Nuevo Empleado";
     clearInputs();
-    idBookingInputEl.setAttribute("value", -1);
+    idEmployeeInputEl.setAttribute("value", -1);
 });
 
 // action when do click on delete button
 okDeleteBtnEl.addEventListener("click", () => {
-    const idBooking = parseInt(idBookingInputEl.getAttribute("value"));
-    // delete booking from bookings
-    bookings = bookings.filter(booking => booking.id !== idBooking);
+    const idEmployee = parseInt(idEmployeeInputEl.getAttribute("value"));
+    // delete employee from employees
+    employees = employees.filter(employee => employee.id !== idEmployee);
     // remove the row
-    const toDeleteTrEl = document.getElementById("tr" + idBooking);
-    bookingsTableBodyEl.removeChild(toDeleteTrEl);
+    const toDeleteTrEl = document.getElementById("tr" + idEmployee);
+    employeesTableBodyEl.removeChild(toDeleteTrEl);
     // hide the delete modal
-    $('#delete-booking-modal').modal('hide');
-    console.table("En ok delete" + bookings);
+    $('#delete-employee-modal').modal('hide');
+    console.table("En ok delete" + employees);
 });
 
-// action when submitting edit form - New and Edit Booking
+// action when submitting edit form - New and Edit Employee
 formEditionEl.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -130,34 +57,34 @@ formEditionEl.addEventListener("submit", (e) => {
     if (formEditionEl.checkValidity()) {
         // action of table modification - used  to simulate the save process
         let modifyTableAction;
-        // get booking object from input fields
-        const booking = getBookingFromInputs();
-        // if the hidden input value is -1 it will be a new booking, otherwise it will be a modification
-        const idBooking = parseInt(idBookingInputEl.getAttribute("value"));
-        if (idBooking === -1) {
-            booking.id = getNextBookingId(bookings);
-            bookings.push(booking);
+        // get employee object from input fields
+        const employee = getEmployeeFromInputs();
+        // if the hidden input value is -1 it will be a new employee, otherwise it will be a modification
+        const idEmployee = parseInt(idEmployeeInputEl.getAttribute("value"));
+        if (idEmployee === -1) {
+            employee.id = getNextEmployeeId();
+            employees.push(employee);
             // if filter toggle is not enabled a new row is added
             if (!isFilterEnabled()) {
-                modifyTableAction = () => bookingsTableBodyEl.appendChild(createTableRow(booking));
+                modifyTableAction = () => employeesTableBodyEl.appendChild(createTableRow(employee));
             }
         } else {
-            booking.id = idBooking;
-            bookings[getIndexById(idBooking, bookings)] = booking;
+            employee.id = idEmployee;
+            employees[getIndexById(idEmployee, employees)] = employee;
             // if filter toggle is not enabled the modified row is replaced by a new
             if (!isFilterEnabled()) {
-                const oldTrEl = document.getElementById("tr" + idBooking);
-                const newTrEl = createTableRow(booking);
-                modifyTableAction = () => bookingsTableBodyEl.replaceChild(newTrEl, oldTrEl);
+                const oldTrEl = document.getElementById("tr" + idEmployee);
+                const newTrEl = createTableRow(employee);
+                modifyTableAction = () => employeesTableBodyEl.replaceChild(newTrEl, oldTrEl);
             }
         }
         // if filter toggle is enabled, it becomes disabled and the table body is drawn again
         if (isFilterEnabled()) {
             setFilterEnabled(false);
-            modifyTableAction = () => fillTableBody(bookings);
+            modifyTableAction = () => fillTableBody(employees);
         }
         // hide the edit modal
-        $('#edit-booking-modal').modal('hide');
+        $('#edit-employee-modal').modal('hide');
         // delay the action and show progress bar
         delayAction(modifyTableAction, durationProgressBar);
 
@@ -165,6 +92,28 @@ formEditionEl.addEventListener("submit", (e) => {
     formEditionEl.classList.add('was-validated');
 });
 
+// action when change the filter toggle
+$('#filter-checkbox').change(() => {
+    setFilterFieldsEnabled(filterCheckboxEl.checked)
+    if (!filterCheckboxEl.checked) {
+        fillTableBody(employees);
+    }
+});
+
+// action when do click on clean filters button
+cleanFiltersBtnEl.addEventListener("click", () => {
+    cleanFilterFields();
+    lastNameFilterEl.focus();
+    fillTableBody(employees);
+});
+
+lastNameFilterEl.addEventListener("keyup", () => {
+    applyFilter();
+});
+
+categoryFilterEl.addEventListener("change", () => {
+    applyFilter();
+});
 
 // TABLE
 
@@ -173,9 +122,9 @@ const createTableHead = (labels) => {
     const theadEl = document.createElement("thead");
     const trEl = document.createElement("tr");
     labels.forEach(element => {
-        const tdEl = document.createElement("td");
-        tdEl.innerText = element;
-        trEl.appendChild(tdEl);
+        const thEl = document.createElement("th");
+        thEl.innerText = element;
+        trEl.appendChild(thEl);
     });
     theadEl.appendChild(trEl);
     return theadEl;
@@ -183,18 +132,18 @@ const createTableHead = (labels) => {
 
 // given the table data, fill the tbody
 const fillTableBody = (tableData) => {
-    bookingsTableBodyEl.innerHTML = "";
+    employeesTableBodyEl.innerHTML = "";
     tableData.forEach(element =>
-        bookingsTableBodyEl.appendChild(createTableRow(element)));
+        employeesTableBodyEl.appendChild(createTableRow(element)));
 }
 
-// given a booking, build the tr element and returns it
-const createTableRow = (booking) => {
+// given a employee, build the tr element and returns it
+const createTableRow = (employee) => {
 
-    // given a booking and a property, resturns a td with the property value
-    const createTableTd = (booking, property) => {
+    // given a employee and a property, returns a td with the property value
+    const createTableTd = (employee, property) => {
         const tdEl = document.createElement("td");
-        tdEl.innerText = booking[property];
+        tdEl.innerText = employee[property];
         return tdEl;
     }
 
@@ -204,69 +153,67 @@ const createTableRow = (booking) => {
         buttonEl.setAttribute("type", "button");
         buttonEl.setAttribute("data-toggle", "modal");
         buttonEl.setAttribute("data-target", `#${target}`);
+        buttonEl.classList.add("btn");
         buttonEl.innerText = labelAction;
         return buttonEl;
     }
 
     const trEl = document.createElement("tr");
     // set id to tr element
-    trEl.setAttribute("id", "tr" + booking.id)
+    trEl.setAttribute("id", "tr" + employee.id)
     // data
-    trEl.appendChild(createTableTd(booking, 'id'));
-    trEl.appendChild(createTableTd(booking, 'first_name'));
-    trEl.appendChild(createTableTd(booking, 'last_name'));
-    trEl.appendChild(createTableTd(booking, 'phone'));
-    trEl.appendChild(createTableTd(booking, 'guests'));
-    trEl.appendChild(createTableTd(booking, 'date_in'));
-    trEl.appendChild(createTableTd(booking, 'days'));
+    trEl.appendChild(createTableTd(employee, 'id'));
+    trEl.appendChild(createTableTd(employee, 'first_name'));
+    trEl.appendChild(createTableTd(employee, 'last_name'));
+    trEl.appendChild(createTableTd(employee, 'phone'));
+    trEl.appendChild(createTableTd(employee, 'category'));
+    trEl.appendChild(createTableTd(employee, 'salary'));
 
     // edit button
-    const tdEditEl = document.createElement("td");
-    const buttonEditEl = getActionButton("Editar", "edit-booking-modal");
-    tdEditEl.appendChild(buttonEditEl);
-    trEl.appendChild(tdEditEl);
+    const tdActionsEl = document.createElement("td");
+    const buttonEditEl = getActionButton("Editar", "edit-employee-modal");
+    buttonEditEl.classList.add("btn-outline-info");
+    tdActionsEl.appendChild(buttonEditEl);
     // action when do click on edit button
     buttonEditEl.addEventListener("click", () => {
-        titleModalEl.innerText = "Editar Reserva";
-        // set booking id in the hidden input
-        idBookingInputEl.setAttribute("value", booking.id);
-        // fill the form with the booking data
-        fillForm(bookings[getIndexById(booking.id, bookings)]);
+        titleModalEl.innerText = "Editar Empleado";
+        // set employee id in the hidden input
+        idEmployeeInputEl.setAttribute("value", employee.id);
+        // fill the form with the employee data
+        fillForm(employees[getIndexById(employee.id, employees)]);
     });
 
     // delete button
-    const tdDeleteEl = document.createElement("td");
-    const buttonDeleteEl = getActionButton("Borrar", "delete-booking-modal");
-    tdDeleteEl.appendChild(buttonDeleteEl);
-    trEl.appendChild(tdDeleteEl);
+    const buttonDeleteEl = getActionButton("Borrar", "delete-employee-modal");
+    buttonDeleteEl.classList.add("btn-outline-danger", "ml-2");
+    tdActionsEl.appendChild(buttonDeleteEl);
+    trEl.appendChild(tdActionsEl);
     // action when do click on delete button
-    buttonDeleteEl.addEventListener("click", (e) => idBookingInputEl.setAttribute("value", booking.id));
+    buttonDeleteEl.addEventListener("click", (e) => idEmployeeInputEl.setAttribute("value", employee.id));
 
     return trEl;
 }
 
 // EDIT FORM
 
-// given a booking, fill the inputs form
-const fillForm = (booking) => {
+// given a employee, fill the inputs form
+const fillForm = (employee) => {
     formEditionEl.classList.remove("was-validated");
-    nameInputEl.value = booking.first_name;
-    lastNameInputEl.value = booking.last_name;
-    phoneInputEl.value = booking.phone;
-    dateInInputEl.value = booking.date_in;
-    daysInputEl.value = booking.days;
-    guestsInputEl.value = booking.guests;
+    nameInputEl.value = employee.first_name;
+    lastNameInputEl.value = employee.last_name;
+    phoneInputEl.value = employee.phone;
+    categoryInputEl.value = employee.category;
+    salaryInputEl.value = employee.salary;
 }
 
-// returns a booking object from the inputs values
-const getBookingFromInputs = () => {
+// returns a employee object from the inputs values
+const getEmployeeFromInputs = () => {
     return {
         last_name: lastNameInputEl.value,
         first_name: nameInputEl.value,
         phone: phoneInputEl.value,
-        guests: guestsInputEl.value,
-        date_in: dateInInputEl.value,
-        days: daysInputEl.value,
+        category: categoryInputEl.value,
+        salary: parseInt(salaryInputEl.value),
     }
 }
 
@@ -276,25 +223,23 @@ const clearInputs = () => {
     nameInputEl.value = "";
     lastNameInputEl.value = "";
     phoneInputEl.value = "";
-    dateInInputEl.value = "";
-    daysInputEl.value = 1;
-    guestsInputEl.value = 1;
+    categoryInputEl.value = "";
+    salaryInputEl.value = 0;
 }
 
+// nextEmployeeId is the next id available for a new employee
+// In first instance is calculated as the next id from the last element of employees array
+// By default employees are sorted by id
+setNextEmployeeId = (employees) =>
+    nextEmployeeId = employees.length == 0 ? 1 : employees[employees.length - 1].id;
 
-// nextBookingId is the next id available for a new booking
-// In first instance is calculated as the next id from the last element of bookings array
-// By default bookings are sorted by id
-const getNextBookingId = (bookings) => {
-    if (nextBookingId == undefined) {
-        nextBookingId = bookings[bookings.length - 1].id;
-    }
-    return ++nextBookingId;
+const getNextEmployeeId = () => {
+    return ++nextEmployeeId;
 }
 
-// given an booking id, return the booking index
-const getIndexById = (id, bookings) => {
-    return bookings.findIndex(booking => booking.id === id);
+// given an employee id, return the employee index
+const getIndexById = (id, employees) => {
+    return employees.findIndex(employee => employee.id === id);
 }
 
 // FILTERS
@@ -302,10 +247,20 @@ const getIndexById = (id, bookings) => {
 // returns if the filter toggle is enabled
 const isFilterEnabled = () => filterCheckboxEl.checked;
 
+const cleanFilterFields = () => {
+    lastNameFilterEl.value = "";
+    categoryFilterEl.value = "--Todos--"
+}
+
 // enable/disable filter fields
 const setFilterFieldsEnabled = (isEnabled) => {
     lastNameFilterEl.disabled = !isEnabled;
-    lastNameFilterEl.value = "";
+    categoryFilterEl.disabled = !isEnabled;
+    cleanFiltersBtnEl.disabled = !isEnabled;
+    cleanFilterFields();
+    if (isEnabled) {
+        lastNameFilterEl.focus();
+    }
 }
 
 // enable/disable filter toggle
@@ -314,7 +269,19 @@ const setFilterEnabled = (isEnabled) => {
     setFilterFieldsEnabled(isEnabled);
 }
 
+// apply filters
+const applyFilter = () => {
+    const employeesFiltrado = employees.filter(employee => {
+        return employee.last_name.toUpperCase().includes(lastNameFilterEl.value.toUpperCase()) &&
+            (categoryFilterEl.value === "--Todos--" || employee.category === categoryFilterEl.value);
+    });
+    fillTableBody(employeesFiltrado);
+}
+
 // PROGRESS BAR
+
+const stepProgressBar = 10;
+const durationProgressBar = 2000;
 
 // Show overlay to progress bar
 const showOverlay = (show) => show ?
@@ -322,16 +289,14 @@ const showOverlay = (show) => show ?
 
 // Show progress Bar
 const showProgressBar = (duration, step) => {
-    // show te overlay
-    showOverlay(true);
-
     let increment = 0;
     const makeProgress = () => {
         if (increment < 100) {
             increment += step;
-            progressBarEl.setAttribute("style", `width: ${increment.toString()}%`);
+            progressBarEl.style.width = `${increment}%`
+            setTimeout(makeProgress, duration / (100 / step));
         }
-        setTimeout(makeProgress, duration / (100 / step));
+        console.log(increment);
     }
     makeProgress();
 }
@@ -346,95 +311,12 @@ const showProgressBar = (duration, step) => {
    - draw the entire table
  */
 const delayAction = (action, duration) => {
+    // show te overlay
+    showOverlay(true);
     showProgressBar(duration, stepProgressBar);
     setTimeout(() => {
         // hide the overlay of progressbar
         showOverlay(false);
         action();
-        console.table(bookings);
     }, duration);
 }
-
-/* FIN CONTROLADO */
-
-const addDays = (date, days) => {
-    console.log("Entrada " + date);
-    console.log("Entrada " + days);
-    const copy = new Date(Number(date))
-    copy.setDate(date.getDate() + days)
-    return copy
-}
-
-function formatDate(date) {
-    var d = new Date(date),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
-
-    if (month.length < 2)
-        month = '0' + month;
-    if (day.length < 2)
-        day = '0' + day;
-
-    return [year, month, day].join('-');
-}
-
-
-/* Esto es del createTableRow
-// data - lo podria hacer asi, pero dependo del correcto orden de las propiedades en el objeto
-// y ademas si tengo datos extras o para ser calculados, como el caso days, no puedo hacerlo
-// de esta manera
-for (const property in booking) {
-    const tdEl = document.createElement("td");
-    tdEl.innerText = booking[property];
-    console.log(tdEl);
-    trEl.appendChild(tdEl);
-} */
-
-
-
-
-
-
-
-
-
-mostrarPbBtnEl.addEventListener("click", () => {
-    //showProgressBar(5000, 10);
-    console.log(getNextBookingId(bookings));
-});
-
-/* Busqueda */
-// ALTA y EDIT
-//  Si esta el filtro activado, desactiva el filtro, limpia los campos de busqueda
-//  y redibuja la tabla. Considero que si el nuevo booking no cumple las condiciones
-// de los filtros, no debiese aparecer en la tabla, lo que se prestaria a confusion
-// cuando hice click en aceptar
-
-
-
-// Action when change the filter toggle
-$('#filter-checkbox').change(() => {
-    setFilterFieldsEnabled(filterCheckboxEl.checked)
-    if (!filterCheckboxEl.checked) {
-        fillTableBody(bookings);
-    }
-});
-
-
-
-
-lastNameFilterEl.addEventListener("keyup", (e) => {
-    //alert(e.target.value.toUpperCase());
-
-    const bookingsFiltrado = bookings.filter(booking =>
-        booking.last_name.toUpperCase().includes(lastNameFilterEl.value.toUpperCase())
-
-    );
-    fillTableBody(bookingsFiltrado);
-
-})
-
-// https://mockapi.io/
-
-// considerar la opcion de cambiar el input oculto para el idBooking por una variable
