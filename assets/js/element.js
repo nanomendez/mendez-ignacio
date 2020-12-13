@@ -17,8 +17,6 @@ const lastNameInputEl = document.getElementById("last-name-input");
 const phoneInputEl = document.getElementById("phone-input");
 const categoryInputEl = document.getElementById("category-input");
 const salaryInputEl = document.getElementById("salary-input");
-// input oculto usado para almacenar el index del employee a modificar, o -1 si es alta
-const idEmployeeInputEl = document.getElementById("id-employee-input");
 // Edit form buttons
 const saveChangesBtnEl = document.getElementById("save-changes-btn");
 const cancelChangesBtnEl = document.getElementById("cancel-changes-btn");

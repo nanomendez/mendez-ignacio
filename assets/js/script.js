@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch('../assets/json/data.json')
         .then(result => result.json())
         .then(rawData => {
-            console.log(rawData);
             // create the thead element and inserted it in the table
             employeesTableEl.appendChild(createTableHead(rawData.labels));
 
@@ -30,23 +29,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // action when do click on add employee button
 addEmployeeButtonEl.addEventListener("click", () => {
-    console.table(employees);
     titleModalEl.innerText = "Nuevo Empleado";
     clearInputs();
-    idEmployeeInputEl.setAttribute("value", -1);
+    // set -1 like id in the form
+    formEditionEl.setAttribute("id-to-edit", -1)
 });
 
 // action when do click on delete button
-okDeleteBtnEl.addEventListener("click", () => {
-    const idEmployee = parseInt(idEmployeeInputEl.getAttribute("value"));
+okDeleteBtnEl.addEventListener("click", (e) => {
+    // get id to delete
+    const idEmployee = parseInt(e.target.getAttribute("id-to-delete"));
     // delete employee from employees
     employees = employees.filter(employee => employee.id !== idEmployee);
     // remove the row
-    const toDeleteTrEl = document.getElementById("tr" + idEmployee);
+    const toDeleteTrEl = document.getElementById(`tr${idEmployee}`);
     employeesTableBodyEl.removeChild(toDeleteTrEl);
     // hide the delete modal
     $('#delete-employee-modal').modal('hide');
-    console.table("En ok delete" + employees);
 });
 
 // action when submitting edit form - New and Edit Employee
@@ -59,21 +58,21 @@ formEditionEl.addEventListener("submit", (e) => {
         let modifyTableAction;
         // get employee object from input fields
         const employee = getEmployeeFromInputs();
-        // if the hidden input value is -1 it will be a new employee, otherwise it will be a modification
-        const idEmployee = parseInt(idEmployeeInputEl.getAttribute("value"));
+        // get the id to edit. If the value is -1 it will be a new employee, otherwise it will be a modification
+        const idEmployee = parseInt(e.target.getAttribute("id-to-edit"));
         if (idEmployee === -1) {
             employee.id = getNextEmployeeId();
             employees.push(employee);
-            // if filter toggle is not enabled a new row is added
+            // if filter toggle is disabled a new row is added
             if (!isFilterEnabled()) {
                 modifyTableAction = () => employeesTableBodyEl.appendChild(createTableRow(employee));
             }
         } else {
             employee.id = idEmployee;
             employees[getIndexById(idEmployee, employees)] = employee;
-            // if filter toggle is not enabled the modified row is replaced by a new
+            // if filter toggle is disabled the modified row is replaced by a new
             if (!isFilterEnabled()) {
-                const oldTrEl = document.getElementById("tr" + idEmployee);
+                const oldTrEl = document.getElementById(`tr${idEmployee}`);
                 const newTrEl = createTableRow(employee);
                 modifyTableAction = () => employeesTableBodyEl.replaceChild(newTrEl, oldTrEl);
             }
@@ -87,7 +86,6 @@ formEditionEl.addEventListener("submit", (e) => {
         $('#edit-employee-modal').modal('hide');
         // delay the action and show progress bar
         delayAction(modifyTableAction, durationProgressBar);
-
     }
     formEditionEl.classList.add('was-validated');
 });
@@ -160,7 +158,7 @@ const createTableRow = (employee) => {
 
     const trEl = document.createElement("tr");
     // set id to tr element
-    trEl.setAttribute("id", "tr" + employee.id)
+    trEl.setAttribute("id", `tr${employee.id}`)
     // data
     trEl.appendChild(createTableTd(employee, 'id'));
     trEl.appendChild(createTableTd(employee, 'first_name'));
@@ -177,8 +175,8 @@ const createTableRow = (employee) => {
     // action when do click on edit button
     buttonEditEl.addEventListener("click", () => {
         titleModalEl.innerText = "Editar Empleado";
-        // set employee id in the hidden input
-        idEmployeeInputEl.setAttribute("value", employee.id);
+        // set employee id in the form
+        formEditionEl.setAttribute("id-to-edit", employee.id)
         // fill the form with the employee data
         fillForm(employees[getIndexById(employee.id, employees)]);
     });
@@ -189,7 +187,7 @@ const createTableRow = (employee) => {
     tdActionsEl.appendChild(buttonDeleteEl);
     trEl.appendChild(tdActionsEl);
     // action when do click on delete button
-    buttonDeleteEl.addEventListener("click", (e) => idEmployeeInputEl.setAttribute("value", employee.id));
+    buttonDeleteEl.addEventListener("click", () => okDeleteBtnEl.setAttribute("id-to-delete", employee.id));
 
     return trEl;
 }
@@ -265,7 +263,7 @@ const setFilterFieldsEnabled = (isEnabled) => {
 
 // enable/disable filter toggle
 const setFilterEnabled = (isEnabled) => {
-    isEnabled ? $('#filter-checkbox').bootstrapToggle('on') : $('#filter-checkbox').bootstrapToggle('off');
+    isEnabled ? $('#filter-checkbox').bootstrapToggle('on', true) : $('#filter-checkbox').bootstrapToggle('off', true);
     setFilterFieldsEnabled(isEnabled);
 }
 
@@ -296,7 +294,6 @@ const showProgressBar = (duration, step) => {
             progressBarEl.style.width = `${increment}%`
             setTimeout(makeProgress, duration / (100 / step));
         }
-        console.log(increment);
     }
     makeProgress();
 }
