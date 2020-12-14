@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(rawData => {
             // create the thead element and inserted it in the table
             employeesTableEl.appendChild(createTableHead(rawData.labels));
-
+            // employees
             employees = rawData.employees;
             // fill the tbody with the employee data
             fillTableBody(employees);
@@ -35,7 +35,7 @@ addEmployeeButtonEl.addEventListener("click", () => {
     formEditionEl.setAttribute("id-to-edit", -1)
 });
 
-// action when do click on delete button
+// action when do click on delete confirmation button
 okDeleteBtnEl.addEventListener("click", (e) => {
     // get id to delete
     const idEmployee = parseInt(e.target.getAttribute("id-to-delete"));
@@ -48,10 +48,36 @@ okDeleteBtnEl.addEventListener("click", (e) => {
     $('#delete-employee-modal').modal('hide');
 });
 
+// action when do click on the table
+// edit and delete buttons - delegation
+employeesTableEl.addEventListener("click", (e) => {
+    // if the HTML element is a button
+    if (e.target.tagName == "BUTTON") {
+        // get the employee id from the table row id. 
+        // for example "tr25". <tr id="tr25"><td><button>... 
+        // this is in order to avoid to put an id, or another attribute, to the button
+        const idEmployee = parseInt(e.target.parentElement.parentElement.id.substring(2));
+        // edit or delete action
+        switch (e.target.getAttribute("data-target")) {
+            case '#edit-employee-modal':
+                titleModalEl.innerText = "Editar Empleado";
+                // set employee id in the form
+                formEditionEl.setAttribute("id-to-edit", idEmployee);
+                // fill the form with the employee data
+                fillForm(employees[getIndexById(idEmployee, employees)]);
+                break;
+            case '#delete-employee-modal':
+                okDeleteBtnEl.setAttribute("id-to-delete", idEmployee);
+                break;
+            default:
+                break;
+        }
+    }
+});
+
 // action when submitting edit form - New and Edit Employee
 formEditionEl.addEventListener("submit", (e) => {
     e.preventDefault();
-
     // check validity of the input fields
     if (formEditionEl.checkValidity()) {
         // action of table modification - used  to simulate the save process
@@ -105,10 +131,12 @@ cleanFiltersBtnEl.addEventListener("click", () => {
     fillTableBody(employees);
 });
 
+// last name filter
 lastNameFilterEl.addEventListener("keyup", () => {
     applyFilter();
 });
 
+// category filter
 categoryFilterEl.addEventListener("change", () => {
     applyFilter();
 });
@@ -172,22 +200,12 @@ const createTableRow = (employee) => {
     const buttonEditEl = getActionButton("Editar", "edit-employee-modal");
     buttonEditEl.classList.add("btn-outline-info");
     tdActionsEl.appendChild(buttonEditEl);
-    // action when do click on edit button
-    buttonEditEl.addEventListener("click", () => {
-        titleModalEl.innerText = "Editar Empleado";
-        // set employee id in the form
-        formEditionEl.setAttribute("id-to-edit", employee.id)
-        // fill the form with the employee data
-        fillForm(employees[getIndexById(employee.id, employees)]);
-    });
 
     // delete button
     const buttonDeleteEl = getActionButton("Borrar", "delete-employee-modal");
     buttonDeleteEl.classList.add("btn-outline-danger", "ml-2");
     tdActionsEl.appendChild(buttonDeleteEl);
     trEl.appendChild(tdActionsEl);
-    // action when do click on delete button
-    buttonDeleteEl.addEventListener("click", () => okDeleteBtnEl.setAttribute("id-to-delete", employee.id));
 
     return trEl;
 }
