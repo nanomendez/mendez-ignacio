@@ -12,19 +12,16 @@ document.addEventListener("DOMContentLoaded", () => {
     employeesTableEl.classList.add("table", "table-striped");
     // disabled filter fields
     setFilterFieldsEnabled(false);
-    // get data from json file
-    fetch('../assets/json/data.json')
-        .then(result => result.json())
-        .then(rawData => {
-            // create the thead element and inserted it in the table
-            employeesTableEl.appendChild(createTableHead(rawData.labels));
-            // employees
-            employees = rawData.employees;
-            // fill the tbody with the employee data
-            fillTableBody(employees);
-            // initialize next employee id
-            nextEmployeeId = setNextEmployeeId(employees);
-        });
+    // get data from js file
+    const rawData = JSON.parse(data);
+    // create the thead element and inserted it in the table
+    employeesTableEl.appendChild(createTableHead(rawData.labels));
+    // employees
+    employees = rawData.employees;
+    // fill the tbody with the employee data
+    fillTableBody(employees);
+    // initialize next employee id
+    nextEmployeeId = setNextEmployeeId(employees);
 });
 
 // action when do click on add employee button

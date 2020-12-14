@@ -1,4 +1,4 @@
-{
+const data = `{
     "employees": [
         {
             "id": 1,
@@ -114,4 +114,4 @@
         "Salario",
         "Acciones"
     ]
-}
+}`
